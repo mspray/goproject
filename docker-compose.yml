@@ -12,9 +12,9 @@ x-environment: &oncall-environment
   CELERY_WORKER_MAX_TASKS_PER_CHILD: "100"
   CELERY_WORKER_SHUTDOWN_INTERVAL: "65m"
   CELERY_WORKER_BEAT_ENABLED: "True"
-  GRAFANA_API_URL: http://lslobst06.lausanne.ch:3000
-  GRAFANA_USER: ${GRAFANA_USER:-admin}
-  GRAFANA_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+  GRAFANA_API_URL: http://localhost:3000
+  GRAFANA_USER: ${GRAFANA_USER:-ana}
+  GRAFANA_PASSWORD: ${GRAFANA_PASSWORD:-5541bond}
 
 services:
   engine:
