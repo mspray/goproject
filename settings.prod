@@ -1,0 +1,51 @@
+import os
+from .hobby import *  # Importe les paramètres par défaut depuis settings.hobby
+
+# Sécurité
+DEBUG = False  # Désactiver le mode debug en production
+SECRET_KEY = os.getenv('SECRET_KEY', 'default_secret_key')  # Utilise la clé fournie dans .env
+ALLOWED_HOSTS = [os.getenv('DOMAIN', 'localhost').replace('http://', '').replace('https://', '')]  # Permet uniquement l'accès à votre domaine
+
+# Base de données
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',  # Utilise SQLite
+        'NAME': os.path.join(os.path.dirname(os.path.abspath(__file__)), 'db.sqlite3'),  # Base locale
+    }
+}
+
+# Redis pour Celery
+CELERY_BROKER_URL = os.getenv('REDIS_URI', 'redis://redis:6379/0')  # URL de Redis configurée dans Docker Compose
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+
+# URL de base pour Grafana OnCall
+BASE_URL = os.getenv('DOMAIN', 'http://localhost:8080')  # Définit l'URL publique pour Grafana OnCall
+
+# API Grafana
+GRAFANA_URL = os.getenv('GRAFANA_API_URL', 'http://localhost:3000')  # URL de Grafana
+
+# Notifications optionnelles (Slack, Telegram, etc.)
+FEATURE_SLACK_INTEGRATION_ENABLED = os.getenv('FEATURE_SLACK_INTEGRATION_ENABLED', 'False') == 'True'
+FEATURE_TELEGRAM_INTEGRATION_ENABLED = os.getenv('FEATURE_TELEGRAM_INTEGRATION_ENABLED', 'False') == 'True'
+
+# Exportateur Prometheus
+FEATURE_PROMETHEUS_EXPORTER_ENABLED = os.getenv('FEATURE_PROMETHEUS_EXPORTER_ENABLED', 'False') == 'True'
+PROMETHEUS_EXPORTER_SECRET = os.getenv('PROMETHEUS_EXPORTER_SECRET', '')
+
+# Configuration de l'email (pour les notifications)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'localhost')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+
+# Configuration FCM (Firebase Cloud Messaging) pour l'application mobile
+FCM_DJANGO_SETTINGS = {
+    "APP_VERBOSE_NAME": "Grafana OnCall",
+    "FCM_SERVER_KEY": os.getenv('FCM_SERVER_KEY', ''),
+    "ONE_DEVICE_PER_USER": False,
+    "DELETE_INACTIVE_DEVICES": False,
+}
+
