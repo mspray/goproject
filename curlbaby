@@ -1,0 +1,11 @@
+curl -X POST 'http://admin:admin@localhost:3000/api/plugins/grafana-oncall-app/settings' \
+-H "Content-Type: application/json" \
+-d '{
+  "enabled": true,
+  "jsonData": {
+    "stackId": 1,
+    "orgId": 1,
+    "onCallApiUrl": "http://localhost:8080/",
+    "grafanaUrl": "http://localhost:3000/"
+  }
+}'
