@@ -1,0 +1,81 @@
+x-environment: &oncall-environment
+  DATABASE_TYPE: sqlite3
+  BROKER_TYPE: redis
+  BASE_URL: $DOMAIN
+  SECRET_KEY: random1234567891011121314151617181920212223242526272829303132
+  FEATURE_PROMETHEUS_EXPORTER_ENABLED: ${FEATURE_PROMETHEUS_EXPORTER_ENABLED:-false}
+  PROMETHEUS_EXPORTER_SECRET: ${PROMETHEUS_EXPORTER_SECRET:-}
+  REDIS_URI: redis://redis:6379/0
+  DJANGO_SETTINGS_MODULE: settings.hobby
+  CELERY_WORKER_QUEUE: "default,critical,long,slack,telegram,webhook,retry,celery,grafana"
+  CELERY_WORKER_CONCURRENCY: "1"
+  CELERY_WORKER_MAX_TASKS_PER_CHILD: "100"
+  CELERY_WORKER_SHUTDOWN_INTERVAL: "65m"
+  CELERY_WORKER_BEAT_ENABLED: "True"
+  GRAFANA_API_URL: http://lslobst06.lausanne.ch:3000
+  GRAFANA_USER: ${GRAFANA_USER:-admin}
+  GRAFANA_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+
+services:
+  engine:
+    image: grafana/oncall:latest
+    restart: always
+    ports:
+      - "8080:8080"
+    command: sh -c "uwsgi --ini uwsgi.ini"
+    environment: *oncall-environment
+    volumes:
+      - oncall_data:/var/lib/oncall
+      - ./settings.prod:/etc/app/settings/prod.py
+    depends_on:
+      redis:
+        condition: service_healthy
+      oncall_db_migration:
+        condition: service_completed_successfully
+
+  celery:
+    image: grafana/oncall:latest
+    restart: always
+    command: sh -c "./celery_with_exporter.sh"
+    environment: *oncall-environment
+    volumes:
+      - oncall_data:/var/lib/oncall
+      - ./settings.prod:/etc/app/settings/prod.py
+    depends_on:
+      redis:
+        condition: service_healthy
+      oncall_db_migration:
+        condition: service_completed_successfully
+
+  oncall_db_migration:
+    image: grafana/oncall:latest
+    command: python manage.py migrate --noinput
+    environment: *oncall-environment
+    volumes:
+      - oncall_data:/var/lib/oncall
+      - ./settings.prod:/etc/app/settings/prod.py
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  redis:
+    image: redis:7.0.5
+    restart: always
+    expose:
+      - 6379
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      timeout: 5s
+      interval: 5s
+      retries: 10
+    deploy:
+      resources:
+        limits:
+          memory: 500m
+          cpus: "0.5"
+
+volumes:
+  oncall_data:
+  redis_data:
